@@ -2,11 +2,13 @@
   "name": "mern",
   "version": "1.0.0",
   "main": "server.js",
-  "author": "Jorge Contreras <jorge.contreras789@gmail.com>",
+  "author": "Jorge Contreras",
   "license": "MIT",
   "scripts": {
     "start": "node server",
-    "server": "nodemon server"
+    "server": "nodemon server",
+    "client": "yarn --cwd client start",
+    "dev": "concurrently \"yarn server\" \"yarn start client\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
