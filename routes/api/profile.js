@@ -7,6 +7,7 @@ const { check, validationResult } = require('express-validator');
 
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const Post = require('../../models/Post');
 
 router.get('/me', auth, async (req, res) => {
   try {
@@ -83,29 +84,42 @@ router.post(
     if (linkedin) profileFields.social.linkedin = linkedin;
     if (instagram) profileFields.social.instagram = instagram;
 
+    // try {
+    //   let profile = await Profile.findOne({ user: req.user.id });
+
+    //   // Update
+    //   if (profile) {
+    //     profile = await Profile.findOneAndUpdate(
+    //       { user: req.user.id },
+    //       { $set: profileFields },
+    //       { new: true }
+    //     );
+
+    //     return res.json(profile);
+    //   }
+
+    //   // Create
+    //   profile = new Profile(profileFields);
+
+    //   await profile.save();
+    //   res.json(profile);
+    //   // return res.json(profile);
+    // } catch (err) {
+    //   console.error(err.message);
+    //   res.status(500).send('Server Error 😑');
+    // }
+
     try {
-      let profile = await Profile.findOne({ user: req.user.id });
-
-      // Update
-      if (profile) {
-        profile = await Profile.findOneAndUpdate(
-          { user: req.user.id },
-          { $set: profileFields },
-          { new: true }
-        );
-
-        return res.json(profile);
-      }
-
-      // Create
-      profile = new Profile(profileFields);
-
-      await profile.save();
+      // Using upsert option (creates new doc if no match is found):
+      let profile = await Profile.findOneAndUpdate(
+        { user: req.user.id },
+        { $set: profileFields },
+        { new: true, upsert: true }
+      );
       res.json(profile);
-      // return res.json(profile);
     } catch (err) {
       console.error(err.message);
-      res.status(500).send('Server Error 😑');
+      res.status(500).send('Server Error');
     }
   }
 );
@@ -143,6 +157,8 @@ router.get('/user/:user_id', async (req, res) => {
 // Delete user/profile
 router.delete('/', auth, async (req, res) => {
   try {
+    await Post.deleteMany({ user: req.user.id });
+
     await Profile.findOneAndRemove({ user: req.user.id });
     await User.findOneAndRemove({ _id: req.user.id });
 
